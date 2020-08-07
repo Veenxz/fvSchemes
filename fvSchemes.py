@@ -94,3 +94,5 @@ f.write( "{method meshWave;}"+"\n")
 
 
 f.close() 
+
+print('File fvSchemes created')
