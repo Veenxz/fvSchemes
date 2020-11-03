@@ -9,6 +9,10 @@
 # relaesed under license GPL GNU 3.0
 
 steady = True
+pseudo_transient = False
+precision = 2    # First order 1 or Second order 2
+unbounded = False
+LUST = False
 secondorder = True
 
 maxOrtho = 80
@@ -50,6 +54,7 @@ if (maxOrtho) > 80:
         '{\n    div(phi,U)       Gauss linearUpwind grad(U);\n'
            '    div(phi,omega)   Gauss upwind;\n'
            '    div(phi,k)       Gauss upwind;\n'
+           '    div(phi,e)       Gauss upwind;\n'
            '    div((nuEff*dev(T(grad(U))))) Gauss linear;\n}'
     )
     laplacianSchemes = (
@@ -69,9 +74,10 @@ if (maxOrtho) > 70:
            '    grad(U)          cellLimited Gauss linear 1.0;\n}'
     )
     divSchemes = (
-        '{\n    div(phi,U)       Gauss linearUpwindgrad(U);\n'
-           '    div(phi,omega)   Gauss linearUpwind default;\n'
-           '    div(phi,k)       Gauss linearUpwind default;\n'
+        '{\n    div(phi,U)       Gauss linearUpwind grad(U);\n'
+           '    div(phi,omega)   Gauss linearUpwind grad(omega);\n'
+           '    div(phi,k)       Gauss linearUpwind grad(k);\n'
+           '    div(phi,e)       Gauss linearUpwind grad(e);\n'
            '    div((nuEff*dev(T(grad(U))))) Gauss linear;\n}'
     )
     laplacianSchemes = (
@@ -92,8 +98,9 @@ if (maxOrtho) > 60:
     )
     divSchemes = (
         '{\n    div(phi,U)       Gauss linearUpwind grad(U);\n'
-           '    div(phi,omega)   Gauss linearUpwinddefault;\n'
-           '    div(phi,k)       Gauss linearUpwinddefault;\n'
+           '    div(phi,omega)   Gauss linearUpwind grad(omega);\n'
+           '    div(phi,k)       Gauss linearUpwind grad(k);\n'
+           '    div(phi,e)       Gauss linearUpwind grad(e);\n'
            '    div((nuEff*dev(T(grad(U))))) Gauss linear;\n}'
     )
     laplacianSchemes = (
@@ -114,8 +121,9 @@ if (maxOrtho) > 0:
     )
     divSchemes = (
         '{\n    div(phi,U)       Gauss linearUpwind grad(U);\n'
-           '    div(phi,omega)   Gauss linearUpwinddefault;\n'
-           '    div(phi,k)       Gauss linearUpwinddefault;\n'
+           '    div(phi,omega)   Gauss linearUpwind grad(omega);\n'
+           '    div(phi,k)       Gauss linearUpwind grad(k);\n'
+           '    div(phi,e)       Gauss linearUpwind grad(e);\n'
            '    div((nuEff*dev(T(grad(U))))) Gauss linear;\n}'
     )
     laplacianSchemes = (
@@ -124,18 +132,53 @@ if (maxOrtho) > 0:
     snGradSchemes = (
         '{\n    default          Gauss linear limited 0.95;\n}'
     )
+
     blending = 0.8
     nonOrthogonalCorrectors = 1
 
-if (steady):
-
-    ddtSchemes = (
-        '{\n    default           steadyState;\n}'
+if (LUST):
+    gradSchemes = (
+        '{\n    default          Gauss linear;\n'
+           '    grad(U)          cellMDLimited leastSquares 1;\n}'
     )
+    divSchemes = (
+        '{\n    div(phi,U)       Gauss LUST grad(U);\n'
+           '    div(phi,omega)   Gauss LUST grad(omega);\n'
+           '    div(phi,k)       Gauss LUST grad(k);\n'
+           '    div(phi,e)       Gauss LUST grad(e);\n'
+           '    div((nuEff*dev(T(grad(U))))) Gauss linear;\n}'
+    )
+    laplacianSchemes = (
+        '{\n    default          Gauss linear corrected;\n}'
+    )
+    snGradSchemes = (
+        '{\n    default          Gauss linear corrected;\n}'
+    )
+    
+    blending = 0.9
+    nonOrthogonalCorrectors = 1
+
+if (steady):
+    ddtSchemes = (
+        '{\n    default          steadyState;\n}'
+    )
+    if (pseudo_transient):
+                ddtSchemes = (
+                    '{\n    default          localEuler;\n}'
+                )
 else:
     ddtSchemes = (
         '{\n    default           CrankNicolson ' + str(blending) + ' ;\n}'
     )
+    if precision == 1:
+        ddtSchemes = (
+            '{\n    default           Euler;\n}'
+        )
+    if (unbounded):
+        ddtSchemes = (
+            '{\n    default           backward;\n}'
+        )
+
 
 wallDist = (
     "{\n    method           meshWave;\n}"
@@ -170,3 +213,4 @@ f.write(footer)
 f.close()
 
 print('File fvSchemes created')
+
