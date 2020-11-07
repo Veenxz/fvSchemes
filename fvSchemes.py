@@ -1,11 +1,5 @@
-# version 1.0
-# created by Carlo Pasquinucci - carlo.a.pasquinucci@gmail.com
-# relaesed under license GPL GNU 3
-
-# Update
-# version 2.0
-# Based on https://github.com/Carlopasquinucci/fvSchemes
-# Generation by Veenxz
+# version 1.0 created by Carlo Pasquinucci - carlo.a.pasquinucci@gmail.com
+# version 2.0 Update by Veenxz - veenzhou@gmail.com
 # relaesed under license GPL GNU 3.0
 
 steady = True
@@ -15,8 +9,8 @@ unbounded = False
 LUST = False
 secondorder = True
 
-maxOrtho = 80
-maxSkew = 20
+maxOrtho = 75
+maxSkew = 1.5
 
 # Header and Footer
 h = [
@@ -162,6 +156,13 @@ if (steady):
     ddtSchemes = (
         '{\n    default          steadyState;\n}'
     )
+    divSchemes = (
+        '{\n    div(phi,U)       bounded Gauss linearUpwind limited;\n'
+           '    div(phi,omega)   bounded Gauss limitedLinear 1;\n'
+           '    div(phi,k)       bounded Gauss limitedLinear 1;\n'
+           '    div(phi,e)       bounded Gauss limitedLinear 1;\n'
+           '    div((nuEff*dev(T(grad(U))))) Gauss linear;\n}'
+    )
     if (pseudo_transient):
                 ddtSchemes = (
                     '{\n    default          localEuler;\n}'
@@ -178,6 +179,15 @@ else:
         ddtSchemes = (
             '{\n    default           backward;\n}'
         )
+        
+interpolationSchemes = (
+    "{\n    default          linear;\n}"
+)
+
+
+fluxRequired = (
+    "{\n}\n"
+)
 
 
 wallDist = (
@@ -203,8 +213,14 @@ f.write("\n")
 f.write("laplacianSchemes" + "\n")
 f.write(laplacianSchemes + "\n")
 f.write("\n")
+f.write("interpolationSchemes" + "\n")
+f.write(interpolationSchemes + "\n")
+f.write("\n")
 f.write("snGradSchemes" + "\n")
 f.write(snGradSchemes + "\n")
+f.write("\n")
+f.write("fluxRequired" + "\n")
+f.write(fluxRequired + "\n")
 f.write("\n")
 f.write("wallDist" + "\n")
 f.write(wallDist + "\n")
@@ -213,4 +229,3 @@ f.write(footer)
 f.close()
 
 print('File fvSchemes created')
-
