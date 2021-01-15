@@ -1,6 +1,6 @@
 # version 2.0
 # Based on https://github.com/Carlopasquinucci/fvSchemes
-# Generation by Veenxz
+# Generation by Veenxz fork by DDm1119
 # relaesed under license GPL GNU 3.0
 
 steady = True
