@@ -1,15 +1,21 @@
-# version 2.0
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# version 3.0
 # Based on https://github.com/Carlopasquinucci/fvSchemes
 # Generation by Veenxz
+# Include more options
 # relaesed under license GPL GNU 3.0
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# !Should make code clean
+# Updated 2021/01/20
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-steady = True
-pseudo_transient = False
-precision = 2    # First order 1 or Second order 2
-unbounded = False
-LUST = True
-secondorder = True
+steady = True               # simpleFoam
+precision = 2               # First order 1 or Second order 2
+unbounded = False           # ddt backward
+pseudo_transient = False    # For pimpleFoam and other solves support LTS
+LUST = True                 # Recommend when using LES
 
+# Mesh check results
 maxOrtho = 29
 maxSkew = 0.35
 
@@ -19,7 +25,7 @@ h = [
     "| =========                 |                                                 |",
     "| \\\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |",
     "|  \\\    /   O peration     | Website:  https://openfoam.org                  |",
-    "|   \\\  /    A nd           | Version:  7                                     |",
+    "|   \\\  /    A nd           | Version:  8                                     |",
     "|    \\\/     M anipulation  |                                                 |",
     "\*---------------------------------------------------------------------------*/",
     "FoamFile", "{", "    version     2.0;", "    format      ascii;",
@@ -138,7 +144,7 @@ if (maxOrtho) > 0:
 if (LUST):
     gradSchemes = (
         '{\n    default          Gauss linear;\n'
-           '    grad(U)          cellMDLimited leastSquares 1;\n}'
+           '    grad(U)          cellMDLimited Gauss linear 0.333;\n}'
     )
     divSchemes = (
         '{\n    div(phi,U)       Gauss LUST grad(U);\n'
@@ -155,7 +161,7 @@ if (LUST):
         '{\n    default          corrected;\n}'
     )
     
-    blending = 0.9
+    blending = 0.7
     nonOrthogonalCorrectors = 1
 
 if (steady):
@@ -163,7 +169,7 @@ if (steady):
         '{\n    default          steadyState;\n}'
     )
     divSchemes = (
-        '{\n    default         none;\n'
+        '{\n    default          none;\n'
            '    div(phi,U)       bounded Gauss linearUpwind limited;\n'
            '    div(phi,omega)   bounded Gauss limitedLinear 1;\n'
            '    div(phi,k)       bounded Gauss limitedLinear 1;\n'
@@ -171,10 +177,6 @@ if (steady):
            '    div(phi,nuTilda) bounded Gauss limitedLinear 1;\n'
            '    div((nuEff*dev2(T(grad(U))))) Gauss linear;\n}'
     )
-    if (pseudo_transient):
-                ddtSchemes = (
-                    '{\n    default          localEuler;\n}'
-                )
 else:
     ddtSchemes = (
         '{\n    default          CrankNicolson ' + str(blending) + ';\n}'
@@ -187,7 +189,12 @@ else:
         ddtSchemes = (
             '{\n    default           backward;\n}'
         )
-        
+
+if (pseudo_transient):
+            ddtSchemes = (
+                '{\n    default          localEuler;\n}'
+            )
+      
 interpolationSchemes = (
     "{\n    default          linear;\n}"
 )
@@ -236,5 +243,5 @@ f.write(footer)
 
 f.close()
 
+print('nonOrthogonalCorrectors in fvSolution is', nonOrthogonalCorrectors)
 print('File fvSchemes created')
-
